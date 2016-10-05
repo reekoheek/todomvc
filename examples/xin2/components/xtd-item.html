@@ -1,0 +1,99 @@
+<style>
+.xtd-item                   .xtd-item--show-on-editing,
+.xtd-item.xtd-item--editing .xtd-item--hide-on-editing {
+  display: none!important;
+}
+
+.xtd-item.xtd-item--editing .xtd-item--show-on-editing,
+.xtd-item                   .xtd-item--hide-on-editing {
+  display: block!important;
+}
+</style>
+
+<template is="xin-template" for="xtd-item">
+  <!-- <template is="dom-if" if="{{!editing}}" strip-whitespace> -->
+  <div on-dblclick="_editAction" class="xtd-item--hide-on-editing">
+    <input type="checkbox" class="toggle" checked="{{item.completed}}" on-change="_notifyAction">
+    <label>{{item.title}}</label>
+    <button class="destroy" on-tap="_destroyAction"></button>
+  </div>
+  <!-- </template> -->
+  <!-- <template is="dom-if" if="{{editing}}" strip-whitespace> -->
+  <input is="xtd-input" id="edit"  class="xtd-item--show-on-editing edit"
+    value="{{_editingValue}}"
+    on-input-commit="_commitAction"
+    on-input-cancel="_cancelAction"
+    on-blur="_onBlur"
+    >
+  <!-- </template> -->
+</template>
+
+<script>
+(function() {
+  'use strict';
+
+  xin.createComponent({
+    is: 'xtd-item',
+
+    extends: 'li',
+
+    properties: {
+      item: {
+        type: Object,
+        value: function () { return {}; },
+        observer: '_itemChanged',
+      },
+    },
+
+    _editAction: function () {
+      this.classList.add('xtd-item--editing');
+      this.set('_editingValue', this.item.title);
+      // Wait one tick template to stamp.
+      // this.async(function () {
+        this.querySelector('#edit').focus();
+      // });
+    },
+
+    _commitAction: function (evt) {
+      evt.stopImmediatePropagation();
+
+      if (this.classList.contains('xtd-item--editing')) {
+        this.classList.remove('xtd-item--editing');
+        this.set('item.title', this._editingValue.trim());
+        if (this.item.title === '') {
+          this._destroyAction();
+        }
+      }
+    },
+
+    _cancelAction: function (evt) {
+      evt.stopImmediatePropagation();
+
+      this.classList.remove('xtd-item--editing');
+    },
+
+    _itemChanged: function() {
+      if (this.item && this.item.completed) {
+        this.classList.add('completed');
+      } else {
+        this.classList.remove('completed');
+      }
+    },
+
+    _notifyAction: function(evt) {
+      evt.stopImmediatePropagation();
+      this._itemChanged();
+      this.fire('change-item', this.item);
+    },
+
+    _onBlur: function (evt) {
+      evt.stopImmediatePropagation();
+      this._commitAction(evt);
+    },
+
+    _destroyAction: function () {
+      this.fire('destroy-item', this.item);
+    },
+  });
+})();
+</script>

@@ -1,0 +1,164 @@
+<link rel="import" href="../bower_components/xin/xin.html">
+
+<style>
+  xtd-app .xtd-app--show-not-empty,
+  xtd-app .xtd-app--show-has-completed {
+    display: none;
+  }
+  xtd-app.xtd-app--not-empty .xtd-app--show-not-empty,
+  xtd-app.xtd-app--has-completed .xtd-app--show-has-completed {
+    display: block;
+  }
+</style>
+
+<template is="xin-template" for="xtd-app">
+  <xtd-model id="model" items="{{items}}"></xtd-model>
+
+  <header id="header">
+    <input is="xtd-input" id="new-todo"
+      placeholder="What needs to be done?" autofocus
+      on-input-commit="addTodoAction"
+      on-input-cancel="cancelAddTodoAction">
+  </header>
+
+  <section id="main" class="xtd-app--show-not-empty">
+    <input id="toggle-all" type="checkbox" checked="[[allCompleted]]"
+      on-change="toggleAllCompletedAction">
+    <label for="toggle-all">Mark all as complete</label>
+    <ul id="todo-list" on-destroy-item="destroyItemAction">
+      <!-- id="todo-list-repeater" -->
+      <template is="xin-repeat" items="{{items}}" filter="{{filter}}">
+        <li is="xtd-item" item="{{item}}" on-change-item="changeItemAction"></li>
+      </template>
+    </ul>
+  </section>
+
+  <footer id="footer" class="xtd-app--show-not-empty">
+    <span id="todo-count">
+      <strong>{{activeCount}}</strong>
+      <span>{{_computeItemsLeft(activeCount)}}</span><span> left</span>
+    </span>
+
+    <ul id="filters">
+      <li route="">
+        <a href="#/">All</a>
+      </li>
+      <li route="active">
+        <a href="#/active">Active</a>
+      </li>
+      <li route="completed">
+        <a href="#/completed">Completed</a>
+      </li>
+    </ul>
+
+    <button id="clear-completed" class="xtd-app--show-has-completed" on-tap="clearCompletedAction">Clear completed</button>
+  </footer>
+</template>
+
+<script>
+(function() {
+  'use strict';
+
+  var filters = {
+    '': function() { return true; },
+    'active': function(item) { return !item.completed; },
+    'completed': function(item) { return item.completed; },
+  };
+
+  xin.createComponent({
+    is: 'xtd-app',
+
+    properties: {
+      items: {
+        type: Array,
+        observer: '_observeItemsChanged',
+      },
+
+      filter: {
+        type: Object,
+      },
+
+      activeCount: {
+        type: Number,
+        value: 0,
+      },
+    },
+
+    attached: function() {
+      this.model = document.getElementById('model');
+
+      var self = this;
+      function hashChanged() {
+        var filter = '';
+        if (location.hash.startsWith('#/')) {
+          filter = location.hash.substr(2);
+        }
+
+        self.set('filter', filters[filter] || filters['']);
+
+        xin.dom(self.$.filters).querySelectorAll('a').forEach(function(el) {
+          if (el.hash === location.hash) {
+            el.classList.add('selected');
+          } else {
+            el.classList.remove('selected');
+          }
+        });
+      }
+
+      hashChanged();
+      window.addEventListener('hashchange', hashChanged);
+    },
+
+    _observeItemsChanged: function(items) {
+      var completedCount = 0;
+      var activeCount = 0;
+
+      if (items.length) {
+        for(var i = 0; i < items.length; i++) {
+          if (items[i].completed) {
+            completedCount++;
+          } else {
+            activeCount++;
+          }
+        }
+
+        this.classList.add('xtd-app--not-empty');
+      } else {
+        this.classList.remove('xtd-app--not-empty');
+      }
+
+      this.set('activeCount', activeCount);
+      if (completedCount) {
+        this.classList.add('xtd-app--has-completed');
+      } else {
+        this.classList.remove('xtd-app--has-completed');
+      }
+    },
+
+    _computeItemsLeft: function(count) {
+      return count < 2 ? 'item' : 'items';
+    },
+
+    addTodoAction: function () {
+      this.model.newItem(this.$['new-todo'].value);
+      this.$['new-todo'].value = '';
+    },
+
+    cancelAddTodoAction: function () {
+      this.$['new-todo'].value = '';
+    },
+
+    clearCompletedAction: function () {
+      this.model.clearCompletedItems();
+    },
+
+    changeItemAction: function(evt, detail) {
+      this.__notify('items', this.items);
+    },
+
+    destroyItemAction: function(e, detail) {
+      this.model.destroyItem(detail);
+    },
+  });
+})();
+</script>

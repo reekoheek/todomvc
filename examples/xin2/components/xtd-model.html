@@ -1,0 +1,42 @@
+<script>
+(function() {
+  'use strict';
+
+  xin.createComponent({
+    is: 'xtd-model',
+
+    properties: {
+      items: {
+        type: Array,
+        notify: true,
+        value: function() {
+          return [];
+        },
+      }
+    },
+
+    newItem: function(title) {
+      title = String(title).trim();
+
+      if (!title) {
+        return;
+      }
+
+      this.push('items', {title: title, completed: false});
+    },
+
+    destroyItem: function(item) {
+      var i = this.items.indexOf(item);
+      if (i > -1) {
+        this.splice('items', i, 1)
+      }
+    },
+
+    clearCompletedItems: function () {
+      this.set('items', this.items.filter(function(item) {
+        return !item.completed;
+      }));
+    },
+  });
+})();
+</script>

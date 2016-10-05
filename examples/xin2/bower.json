@@ -1,0 +1,22 @@
+{
+  "name": "xin2",
+  "homepage": "https://github.com/reekoheek/todomvc",
+  "authors": [
+    "Ganesha <reekoheek@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "todomvc-common": "^1.0.1",
+		"todomvc-app-css": "^1.0.0",
+    "xin": "xinix-technology/xin#ver-2.x"
+  }
+}
